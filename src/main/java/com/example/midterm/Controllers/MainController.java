@@ -1,39 +1,42 @@
 package com.example.midterm.Controllers;
 
-import com.example.midterm.Dao.CustomersDao;
 import com.example.midterm.Models.Customers;
 import com.example.midterm.Repositories.CustomersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/")
 public class MainController {
-    @Autowired
-    CustomersRepository customersRepository;
+    private CustomersRepository customerRepository;
 
     @Autowired
-    CustomersDao customersDao;
-
-    // Returns home.html
-    @RequestMapping("/home")
-    public String getHomePage() {
-        return "home";
+    public MainController(CustomersRepository customerRepository)
+    {
+        this.customerRepository = customerRepository;
     }
 
-    // Retrieves all customers in table
-    @GetMapping("/customers")
-    public @ResponseBody Iterable<Customers> getAllUsers() {
-        // This returns a JSON or XML with the users
-        return customersRepository.findAll();
+
+    @RequestMapping(value = "/index", method = RequestMethod.GET)
+    public String customers(Model model) {
+        List<Customers> customersList = customerRepository.findAll();
+        if (customersList != null) {
+            model.addAttribute("customers", customersList);
+        }
+        return "index";
     }
 
-    // Add new customer into table
-    @PostMapping("/addcustomer")
-    public String addCustomer(@RequestBody Customers customers) {
-        customersDao.create(customers);
-
-        return "redirect:customers";
+    @PostMapping(value = "/index")
+    public String addToCustomers(String firstName, Customers customer) {
+        customer.setEmailAddress(firstName);
+        customerRepository.save(customer);
+        return "redirect:/index";
     }
 }
